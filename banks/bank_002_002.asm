@@ -5332,11 +5332,11 @@ jr_002_6037:
     ld hl, $73cf
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $7bcf
     ld de, $8800
     ld bc, $0150
-    call Call_000_01b0
+    call DataTransfer
     ld a, $09
     ld de, $9800
     ld hl, $7d1f

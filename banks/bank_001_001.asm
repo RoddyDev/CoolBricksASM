@@ -6250,21 +6250,21 @@ jr_001_6b11:
 Jump_001_6b40:
     ld de, $df01
     ld bc, $0051
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df4a]
     ld l, a
     ld a, [$df4b]
     ld h, a
     ld de, $cb69
     ld bc, $0018
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df50]
     ld l, a
     ld a, [$df51]
     ld h, a
     ld de, $cc99
     ld bc, $001b
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df43]
     ld hl, $cb96
     ld de, $001c
@@ -8321,11 +8321,11 @@ GBC_Check:
 
     ; RAM check failed, this might not be a GBC or wrong hardware
     ld a, $0a
-    push af
+    push af                 ; Push A = 0A to stack
     jr .NotGBC
 
 .RAMCheckPass:
-    push af                 ; A = 00
+    push af                 ; If check passed, A should be 00.
     ldh a, [rKEY1]          ; get CPU speed
     bit 7, a                ; check for bit 7
     jr nz, .SoftReset       ; if bit 7 is set, that means CPU is already at double speed. Probably a soft reset.
@@ -8354,11 +8354,11 @@ GBC_Check:
     ld hl, $ff80
     ld bc, $007f
     call ClearRAM
-    call LoadOAMCode
-    call LoadHighScores
-    pop af                  
-    ld [$ff9f], a
-    ret
+    call LoadOAMCode            ; Load OAM DMA code
+    call LoadHighScores         ; Load High Scores info
+    pop af                      ; Get RAM Check info back to A
+    ld [$ff9f], a               ; Store to RAM
+    ret                         ; return
 
 
     db $98, $50, $1e, $02, $98, $58, $1f, $02, $98, $60, $20, $02, $98, $68, $21, $02
@@ -8602,11 +8602,11 @@ jr_001_7ca8:
     jr jr_001_7ca8
 
     ld bc, $0090
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5574
     ld de, $8000
     ld bc, $0010
-    call Call_000_01b0
+    call DataTransfer
     ld a, $26
     ld de, $9800
     ld hl, $5614
@@ -8616,14 +8616,14 @@ jr_001_7ca8:
     ld hl, $4ca8
     ld de, $dd03
     ld bc, $0006
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df33]
     ld l, a
     ld a, [$df34]
     ld h, a
     ld de, $dd0b
     ld bc, $003e
-    call Call_000_01b0
+    call DataTransfer
     ld a, $01
     call ChangeROMBank
     ld hl, $6784
@@ -8748,7 +8748,7 @@ jr_001_7d1d:
     ld hl, $6543
     ld de, $de81
     ld bc, $0037
-    call Call_000_01b0
+    call DataTransfer
     ret
 
 
@@ -8784,7 +8784,7 @@ jr_001_7d1d:
     ld hl, $49b8
     ld de, $9000
     ld bc, $0630
-    call Call_000_01b0
+    call DataTransfer
     ld de, $9800
     ld hl, $4fe8
     ld b, $14
@@ -8867,7 +8867,7 @@ jr_001_7e7b:
     ld hl, $5580
     ld de, $9000
     ld bc, $07b0
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $5d30
@@ -8920,11 +8920,11 @@ jr_001_7ef8:
     ld hl, $674f
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $6f4f
     ld de, $8800
     ld bc, $0790
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $7e87
@@ -8936,11 +8936,11 @@ jr_001_7ef8:
     ld hl, $73cf
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $7bcf
     ld de, $8800
     ld bc, $0150
-    call Call_000_01b0
+    call DataTransfer
     ld a, $09
     ld de, $9800
     ld hl, $7d1f

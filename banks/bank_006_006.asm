@@ -1598,10 +1598,14 @@ jr_006_4719:
 jr_006_473e:
     ret
 
-
-    ld hl, $4989
-    ld d, $00
-    add hl, de
+; PlaySong routine
+; This setups pointers to play a song.
+; Parameters: E = Song ID
+Call_006_473f:
+PlaySong:              
+    ld hl, SongModuleHeaderList     ; Song module list pointer
+    ld d, $00                       ; Zero out D, we only need E as an index.
+    add hl, de                      ; 
     add hl, de
     add hl, de
     add hl, de
@@ -1636,20 +1640,20 @@ jr_006_473e:
     ld [$c065], a
     ld a, [hl+]
     ld [$c066], a
-    xor a
+    xor a                   ; Disable sound
     ldh [rNR30], a
-    ld a, [hl+]
+    ld a, [hl+]             ; setup waveform pointer
     ld h, [hl]
     ld l, a
-    ld de, $ff30
+    ld de, $ff30            ; Destination: Wave RAM
 
-jr_006_4786:
-    ld a, [hl+]
-    ld [de], a
-    inc e
+InitWaveRAM:
+    ld a, [hl+]             ; Load wave RAM data
+    ld [de], a              ; Send to Wave RAM
+    inc e                   ; Increase destination index
     ld a, e
     cp $40
-    jr nz, jr_006_4786
+    jr nz, InitWaveRAM
 
     ld a, $ff
     ldh [rNR52], a
@@ -1889,8 +1893,12 @@ jr_006_4868:
     ld e, l
     ld [bc], a
 
-    db $df, $50, $e1, $50, $e3, $50, $e5, $50, $08, $cf, $66, $f2, $65, $b1, $4b, $01
-    db $4c, $51, $4c, $a1, $4c, $07, $40, $66, $32, $66, $a3, $4c, $03, $4d, $63, $4d
+    SongModuleHeaderList:              ; song module header list 
+    BGM_Module_00:
+    db $df, $50, $e1, $50, $e3, $50, $e5, $50, $08, $cf, $66, $f2, $65
+    BGM_Module_01:
+    db $b1, $4b, $01, $4c, $51, $4c, $a1, $4c, $07, $40, $66, $32, $66
+    db $a3, $4c, $03, $4d, $63, $4d
     db $c3, $4d, $07, $40, $66, $32, $66, $c5, $4d, $25, $4e, $85, $4e, $e5, $4e, $07
     db $cf, $66, $f2, $65, $e7, $4e, $17, $4f, $47, $4f, $77, $4f, $07, $cf, $66, $f2
     db $65
@@ -5098,8 +5106,9 @@ jr_006_659f:
     ld h, l
 
     db $80, $01, $01, $16, $5e, $1a, $5e, $11, $5e, $00, $01, $01, $1b, $5e, $16, $5e
-    db $7a, $48, $7a, $48, $16, $5e, $1a, $5e, $11, $5e, $f0, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $7a, $48, $7a, $48, $16, $5e, $1a, $5e, $11, $5e
+    WaveRAMPiss:
+    db $f0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
     rst $38
     rst $38
@@ -10825,11 +10834,11 @@ jr_006_7d23:
     ld hl, $73cf
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $7bcf
     ld de, $8800
     ld bc, $0150
-    call Call_000_01b0
+    call DataTransfer
     ld a, $09
     ld de, $9800
     ld hl, $7d1f

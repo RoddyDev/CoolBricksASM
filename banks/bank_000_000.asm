@@ -14,13 +14,19 @@ ProgramStart:
     ld sp, hl
     call GBC_Check          ; Do a RAM Check to check if the ROM is being booted on the correct hardware
 
-jr_000_0158:
-    ldh a, [rLY]
-    cp $90
-    jr c, jr_000_0158
+    jr_000_0158:
+    .WaitForVBlank:
+    ldh a, [rLY]            ; Check current rendering line
+    cp $90                  ; Wait until VBlank (Line 144)
+    jr c, .WaitForVBlank    ; If carry is set, that means (rLY - $90) < 0, did not reach VBlank. Do another loop.
 
-    xor a
-    ldh [rLCDC], a
+    xor a                   ; Zero out A register
+    ldh [rLCDC], a          ; Turn off LCD
+
+    ; CAUTION!
+    ; Stopping LCD operation (Bit 7 from 1 to 0) may be performed during VBlank ONLY.
+    ; Disabling the display outside of the VBlank period may damage the hardware by burning in a black horizontal line.
+    ; This appears to be a serious issue. Nintendo is reported to reject any games not following this rule.
 
 Jump_000_0161:
     ld e, $00
@@ -84,8 +90,6 @@ ClearRAM:
 
     ret
 
-
-Call_000_01b0:
 ; DataTransfer routine
 ; This transfer data from anywhere to RAM.
 ; Parameters: BC = Data Length
@@ -899,7 +903,7 @@ jr_000_05a1:
     ld hl, $7d2c
     ld de, $8b40
     ld bc, $0090
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df44]
     call ChangeROMBank
     ld a, $26
@@ -1450,7 +1454,7 @@ jr_000_095b:
     ld de, $cb7c
     ld hl, $cce3
     ld bc, $0004
-    call Call_000_01b0
+    call DataTransfer
     ret
 
 
@@ -1831,11 +1835,11 @@ jr_000_0b49:
     call ChangeROMBank
     ld de, $c95d
     ld bc, $0040
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $4630
     ld de, $c99d
     ld bc, $0040
-    call Call_000_01b0
+    call DataTransfer
     pop hl
     ld a, [$db53]
     or a
@@ -1846,10 +1850,10 @@ jr_000_0b49:
 jr_000_0b81:
     ld de, $c95d
     ld bc, $0008
-    call Call_000_01b0
+    call DataTransfer
     ld de, $c96d
     ld bc, $0008
-    call Call_000_01b0
+    call DataTransfer
     ld de, $c95d
     call Call_000_0061
     ld a, $05
@@ -1980,21 +1984,21 @@ jr_000_0c9a:
     ld hl, $4b2c
     ld de, $8000
     ld bc, $07f0
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5dec
     ld de, $9000
     ld bc, $0250
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $594c
     ld de, $9250
     ld bc, $04a0
-    call Call_000_01b0
+    call DataTransfer
     ld a, $0b
     call ChangeROMBank
     ld hl, $7d2c
     ld de, $96f0
     ld bc, $0110
-    call Call_000_01b0
+    call DataTransfer
     ld a, $01
     call ChangeROMBank
     pop hl
@@ -2013,16 +2017,16 @@ jr_000_0c9a:
     ldh [rVBK], a
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld de, $8800
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld a, $02
     call ChangeROMBank
     ld hl, $531c
     ld de, $8000
     ld bc, $0630
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ldh [rVBK], a
     ld a, $01
@@ -2095,7 +2099,7 @@ Jump_000_0d73:
     ld hl, $9800
     ld de, $d32a
     ld bc, $0400
-    call Call_000_01b0
+    call DataTransfer
     call $6ea5
     ret
 
@@ -2159,7 +2163,7 @@ Call_000_0dde:
     ld h, a
     ld de, $d72a
     ld bc, $001b
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$cce8]
     inc a
     ld c, $00
@@ -5416,19 +5420,19 @@ jr_000_1f68:
     ld hl, $6edc
     ld de, $8000
     ld bc, $04c0
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $603c
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $683c
     ld de, $8800
     ld bc, $0340
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $6b7c
     ld de, $8b40
     ld bc, $0090
-    call Call_000_01b0
+    call DataTransfer
     ld a, $25
     ld de, $9880
 
@@ -5445,7 +5449,7 @@ Call_000_2000:
     ld h, a
     ld de, $dac3
     ld bc, $0014
-    call Call_000_01b0
+    call DataTransfer
 
 Jump_000_2020:
     ld a, [$df43]
@@ -6349,15 +6353,15 @@ jr_000_2535:
     ld hl, $4000
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $4800
     ld de, $8800
     ld bc, $0620
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $6468
     ld de, $8000
     ld bc, $00d0
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $5dac
@@ -6382,11 +6386,11 @@ jr_000_25cf:
     ld hl, $4e10
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5610
     ld de, $8800
     ld bc, $0620
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$defc]
     ld hl, $6538
     dec a
@@ -6405,11 +6409,11 @@ jr_000_25cf:
 jr_000_2605:
     ld de, $8e20
     ld bc, $0140
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5f28
     ld de, $8000
     ld bc, $0540
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld [$dab5], a
     ld de, $9800
@@ -6499,11 +6503,11 @@ jr_000_2692:
     ld hl, $496c
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $516c
     ld de, $8800
     ld bc, $0340
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $63a4
@@ -6515,11 +6519,11 @@ jr_000_2692:
     ld hl, $54ac
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5cac
     ld de, $8800
     ld bc, $0590
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $623c
@@ -9591,11 +9595,11 @@ jr_000_392c:
     ld hl, $48c1
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $50c1
     ld de, $8800
     ld bc, $0340
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9c00
     ld hl, $62f9
@@ -9607,11 +9611,11 @@ jr_000_392c:
     ld hl, $5401
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5c01
     ld de, $8800
     ld bc, $0590
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9c00
     ld hl, $6191
@@ -9666,11 +9670,11 @@ jr_000_39ec:
     ld hl, $739c
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $7b9c
     ld de, $8800
     ld bc, $00f0
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld [$dae1], a
     ld de, $9800
@@ -9722,11 +9726,11 @@ jr_000_39ec:
     ld hl, $4a20
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5220
     ld de, $8800
     ld bc, $0090
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $52b0
@@ -9783,11 +9787,11 @@ jr_000_3ae3:
     ld hl, $650c
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $6d0c
     ld de, $8800
     ld bc, $0500
-    call Call_000_01b0
+    call DataTransfer
     call Call_000_3b50
     ld a, $01
     call ChangeROMBank
@@ -10011,15 +10015,15 @@ jr_000_3c3d:
     ld hl, $4de4
     ld de, $9000
     ld bc, $0790
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5584
     ld de, $8b40
     ld bc, $0090
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $5574
     ld de, $8000
     ld bc, $0010
-    call Call_000_01b0
+    call DataTransfer
     ld a, $26
     ld de, $9800
     ld hl, $5614
@@ -10029,7 +10033,7 @@ jr_000_3c3d:
     ld hl, $4ca8
     ld de, $dd03
     ld bc, $0006
-    call Call_000_01b0
+    call DataTransfer
     ld a, [$df33]
 
 Call_000_3cda:
@@ -10038,7 +10042,7 @@ Call_000_3cda:
     ld h, a
     ld de, $dd0b
     ld bc, $003e
-    call Call_000_01b0
+    call DataTransfer
     ld a, $01
     call ChangeROMBank
     ld hl, $6784
@@ -10163,7 +10167,7 @@ jr_000_3d1d:
     ld hl, $6543
     ld de, $de81
     ld bc, $0037
-    call Call_000_01b0
+    call DataTransfer
     ret
 
 
@@ -10199,7 +10203,7 @@ jr_000_3d1d:
     ld hl, $49b8
     ld de, $9000
     ld bc, $0630
-    call Call_000_01b0
+    call DataTransfer
     ld de, $9800
 
 Call_000_3e41:
@@ -10218,9 +10222,9 @@ Call_000_3e51:
     ret nz
 
 Call_000_3e56:
-    ld a, $06
+    ld a, $06               ; Load ROM Bank 06
     ld [ROM_BANK], a
-    call $473f
+    call Call_006_473f
     ld a, $01
     ld [ROM_BANK], a
     ret
@@ -10290,7 +10294,7 @@ Call_000_3e7f:
     ld hl, $5580
     ld de, $9000
     ld bc, $07b0
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $5d30
@@ -10343,11 +10347,11 @@ jr_000_3ef8:
     ld hl, $674f
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $6f4f
     ld de, $8800
     ld bc, $0790
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $7e87
@@ -10359,11 +10363,11 @@ jr_000_3ef8:
     ld hl, $73cf
     ld de, $9000
     ld bc, $0800
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $7bcf
     ld de, $8800
     ld bc, $0150
-    call Call_000_01b0
+    call DataTransfer
     ld a, $09
     ld de, $9800
     ld hl, $7d1f

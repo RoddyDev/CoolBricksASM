@@ -114,7 +114,7 @@ Jump_00f_40ca:
 
 Jump_00f_4100:
 jr_00f_4100:
-    call Call_000_01b0
+    call DataTransfer
     ret
 
 

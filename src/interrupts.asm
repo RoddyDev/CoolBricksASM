@@ -51,7 +51,7 @@ RST_28::
 
 Call_000_002b:
     inc de
-    call Call_000_01b0
+    call DataTransfer
     db $3e
 
 RST_30::
@@ -213,11 +213,11 @@ Jump_000_00c3:
     ld bc, $0800
 
 Jump_000_00d3:
-    call Call_000_01b0
+    call DataTransfer
     ld hl, $4800
     ld de, $8800
     ld bc, $0050
-    call Call_000_01b0
+    call DataTransfer
     xor a
     ld de, $9800
     ld hl, $4850

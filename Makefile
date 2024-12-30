@@ -12,6 +12,7 @@ game.o: game.asm banks/bank_*.asm $(IMAGE_DEPS)
 	rgbasm -o game.o game.asm
 
 game.gbc: game.o
+	echo off
 	rgblink -n game.sym -m game.map -o $@ $<
 	rgbfix -v -p 255 $@
 	CertUtil -hashfile game.gbc MD5
